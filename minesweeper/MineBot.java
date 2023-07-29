@@ -76,7 +76,6 @@ public class MineBot {
                 }
             }
         }
-        System.out.println(queue.size());
         while (queue.size() > 0) {
             Minefield[] pair = queue.iterator().next();
             queue.remove(pair);
