@@ -90,22 +90,22 @@ public class Sweeper {
         this.filled = true;
     }
     private boolean isMine(MineTile space) {
-        return this.mines[space.x][space.y];
+        return this.mines[space.x()][space.y()];
     }
     private void setMine(MineTile space, boolean mine) {
-        if (this.mines[space.x][space.y] == mine) {
+        if (this.mines[space.x()][space.y()] == mine) {
             return;
         }
-        int neighbourChange = (!this.mines[space.x][space.y] && mine) ? 1 : -1;
+        int neighbourChange = (!this.mines[space.x()][space.y()] && mine) ? 1 : -1;
 
-        this.mines[space.x][space.y] = mine;
+        this.mines[space.x()][space.y()] = mine;
         Set<MineTile> surrounding = this.getSurrounding(space);
         for (MineTile tile : surrounding) {
-            this.neighbours[tile.x][tile.y] += neighbourChange;
+            this.neighbours[tile.x()][tile.y()] += neighbourChange;
         }
     }
     private int getNeighbours(MineTile space) {
-        return this.neighbours[space.x][space.y];
+        return this.neighbours[space.x()][space.y()];
     }
     public Set<MineTile> getTouching(MineTile space) {
         return this.getSurrounding(space, true);
@@ -117,28 +117,28 @@ public class Sweeper {
     }
     public Set<MineTile> getSurrounding(MineTile space, boolean onlyClosed) {
         Set<MineTile> spaces = new HashSet<>();
-        if (space.y > 0) {
-            this.addIf(spaces, new MineTile(space.x, space.y - 1), onlyClosed);
+        if (space.y() > 0) {
+            this.addIf(spaces, new MineTile(space.x(), space.y() - 1), onlyClosed);
         }
-        if (space.y < this.height - 1) {
-            this.addIf(spaces, new MineTile(space.x, space.y + 1), onlyClosed);
+        if (space.y() < this.height - 1) {
+            this.addIf(spaces, new MineTile(space.x(), space.y() + 1), onlyClosed);
         }
-        if (space.x > 0) {
-            this.addIf(spaces, new MineTile(space.x - 1, space.y), onlyClosed);
-            if (space.y > 0) {
-                this.addIf(spaces, new MineTile(space.x - 1, space.y - 1), onlyClosed);
+        if (space.x() > 0) {
+            this.addIf(spaces, new MineTile(space.x() - 1, space.y()), onlyClosed);
+            if (space.y() > 0) {
+                this.addIf(spaces, new MineTile(space.x() - 1, space.y() - 1), onlyClosed);
             }
-            if (space.y < this.height - 1) {
-                this.addIf(spaces, new MineTile(space.x - 1, space.y + 1), onlyClosed);
+            if (space.y() < this.height - 1) {
+                this.addIf(spaces, new MineTile(space.x() - 1, space.y() + 1), onlyClosed);
             }
         }
-        if (space.x < this.width - 1) {
-            this.addIf(spaces, new MineTile(space.x + 1, space.y), onlyClosed);
-            if (space.y > 0) {
-                this.addIf(spaces, new MineTile(space.x + 1, space.y - 1), onlyClosed);
+        if (space.x() < this.width - 1) {
+            this.addIf(spaces, new MineTile(space.x() + 1, space.y()), onlyClosed);
+            if (space.y() > 0) {
+                this.addIf(spaces, new MineTile(space.x() + 1, space.y() - 1), onlyClosed);
             }
-            if (space.y < this.height - 1) {
-                this.addIf(spaces, new MineTile(space.x + 1, space.y + 1), onlyClosed);
+            if (space.y() < this.height - 1) {
+                this.addIf(spaces, new MineTile(space.x() + 1, space.y() + 1), onlyClosed);
             }
         }
         return spaces;
@@ -147,19 +147,19 @@ public class Sweeper {
         return this.getSurrounding(space, false);
     }
     public boolean isOpen(MineTile space) {
-        return this.open[space.x][space.y];
+        return this.open[space.x()][space.y()];
     }
     private void setOpen(MineTile space) {
         if (!this.isOpen(space)) {
             this.remainingSpaces -= 1;
-            this.open[space.x][space.y] = true;
+            this.open[space.x()][space.y()] = true;
         }
     }
     public void setFlag(MineTile space, boolean flag) {
-        this.flags[space.x][space.y] = flag;
+        this.flags[space.x()][space.y()] = flag;
     }
     public boolean isFlagged(MineTile space) {
-        return this.flags[space.x][space.y];
+        return this.flags[space.x()][space.y()];
     }
     public OpenResponse tryOpen(MineTile space) {
         if (!this.filled) {

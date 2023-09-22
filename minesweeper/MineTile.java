@@ -2,31 +2,12 @@ package minesweeper;
 /**
  * MineTile
  */
-public class MineTile {
-
-    public int x;
-    public int y;
-
-    public MineTile(int x, int y) {
-        this.x = x;
-        this.y = y;
+public record MineTile(int x, int y) {
+    public int x() {
+        return this.x;
     }
-
-    @Override
-    public int hashCode() {
-        return this.y ^ (this.x << 16);
-    }
-
-    @Override
-    public boolean equals(Object other) {
-        if (other == this) {
-            return true;
-        }
-        if (!(other instanceof MineTile)) {
-            return false;
-        }
-        MineTile other_tile = (MineTile) other;
-        return other_tile.x == this.x && other_tile.y == this.y;
+    public int y() {
+        return this.y;
     }
 
     @Override

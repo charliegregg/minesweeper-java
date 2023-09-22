@@ -138,7 +138,7 @@ public class MineBot {
         int[][] counts = new int[this.board.width][this.board.height];
         for (Minefield field : this.fields) {
             for (MineTile space : field.getSpaces()) {
-                counts[space.x][space.y]++;
+                counts[space.x()][space.y()]++;
             }
         }
         Set<MineTile> tiles = new HashSet<>();
