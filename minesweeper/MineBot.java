@@ -6,12 +6,15 @@ import java.util.function.Consumer;
 
 /**
  * MineBot
+ * A bot that plays minesweeper
+ * 
+ * @author Charlie Gregg
  */
 public class MineBot {
 
-    public Sweeper board;
-    private int state;
-    private Set<Minefield> fields;
+    public Sweeper board; // the board being played on
+    private int state; // the current win state
+    private Set<Minefield> fields; // all known fields on the board
 
     public MineBot(Sweeper board) {
         this.board = board;
@@ -19,32 +22,47 @@ public class MineBot {
         this.fields.add(new Minefield(this.board.getAllSpaces(), this.board.mineCount));
         this.state = 0;
     }
-
+    /**
+     * Make the bot open a space
+     * @param space the space to open
+     */
     private void open(MineTile space) {
-        OpenResponse response = this.board.tryOpen(space);
-        if (response.tag == "lose") {
+        Open response = this.board.tryOpen(space);
+        if (response.tag() == Open.Tag.LOSE) {
             this.state = -1;
             return;
         }
-        if (response.tag == "win") {
+        if (response.tag() == Open.Tag.WIN) {
             this.state = 1;
             return;
         }
-        this.fields.add(new Minefield(this.board.getTouching(space), response.neighbours));
+        this.fields.add(new Minefield(this.board.getTouching(space), response.neighbours()));
     }
+    /**
+     * Make the bot open the best space available
+     */
     public void openBest() {
-        double best_chance = 1;
-        Minefield best_field = this.fields.iterator().next();
+        double best_chance = 1; // best chance of a mine so far
+        Minefield best_field = this.fields.iterator().next(); // best field so far
+        double chance; // the new chance
+        MineTile space; // the space to open
         for (Minefield field : this.fields) {
-            double chance = field.getChance();
+            chance = field.getChance();
             if (chance < best_chance) {
                 best_chance = chance;
                 best_field = field;
             }
         }
-        MineTile space = new ArrayList<>(best_field.getSpaces()).get((int) Math.floor(Math.random()*best_field.getSpaces().size()));
+        space = new ArrayList<>(best_field.getSpaces()).get(
+            (int) Math.floor(Math.random()*best_field.getSpaces().size())
+        );
         this.open(space);
     }
+    /**
+     * Run the bot until it wins or loses
+     * @param interupter a function to run every iteration with the board
+     * @return true if the bot won
+     */
     public boolean run(Consumer<Sweeper> interupter) {
         while (this.state == 0) {
             interupter.accept(this.board);
@@ -52,7 +70,10 @@ public class MineBot {
         }
         return this.state == 1;
     }
-
+    /**
+     * Expand the fields on the board and resolve
+     * This is the main logic of the bot
+     */
     private void expand() {
         if (this.state != 0) {
             return;
@@ -112,7 +133,7 @@ public class MineBot {
                     found = true;
                 }
             }
-            // add flags for show
+            // add flags for show (not needed since bot doesn't look for them)
             if (field.filled()) {
                 for (MineTile space : field.getSpaces()) {
                     this.board.setFlag(space, true);
@@ -130,11 +151,15 @@ public class MineBot {
         if (solved) {
             this.state = 1;
         } else if (!found) {
-            this.openBest();
+            this.openBest(); // if we don't know, guess
         }
     }
-
-    public Set<MineTile> get_highlights(int min) {
+    /**
+     * Gets all spaces in at least min fields
+     * @param min the minimum number of fields a space must be in
+     * @return the spaces in at least min fields
+     */
+    public Set<MineTile> getHighlights(int min) {
         int[][] counts = new int[this.board.width][this.board.height];
         for (Minefield field : this.fields) {
             for (MineTile space : field.getSpaces()) {

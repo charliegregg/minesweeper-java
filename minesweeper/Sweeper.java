@@ -5,32 +5,25 @@ import java.util.Set;
 
 /**
  * Sweeper
+ * A minesweeper board simulator
+ * 
+ * @author Charlie Gregg
  */
-class OpenResponse {
-    int neighbours;
-    String tag;
-
-    public OpenResponse(int neighbours, String tag) {
-        this.neighbours = neighbours;
-        this.tag = tag;
-    }
-}
 public class Sweeper {
+    private boolean[][] mines; // true if there is a mine at this location
+    private int[][] neighbours; // the number of neighbouring mines
+    private boolean[][] open; // true if the tile has been opened
+    private boolean[][] flags; // true if the tile has been flagged
+    private boolean filled; // true if the board has been populated
+    MineTile hitLocation; // the location of the hit mine
+    int width; // the width of the board
+    int height; // the height of the board
+    int mineCount; // the number of mines on the board
+    double mineChance; // the chance of a mine being on each tile
+    long seed; // the seed used to generate the board
+    int remainingSpaces; // the number of unopened tiles
 
-    private boolean[][] mines;
-    private int[][] neighbours;
-    private boolean[][] open;
-    private boolean[][] flags;
-    private boolean filled;
-    MineTile hitLocation;
-    int width;
-    int height;
-    int mineCount;
-    double mineChance;
-    long seed;
-    int remainingSpaces;
-
-    private final static String SYMBOLS = " 12345678#FX";
+    private final static String SYMBOLS = " 12345678#FX"; // the symbols used to display the board
 
     public Sweeper(double mineChance, int width, int height, long seed) {
         this.mineChance = Math.min(Math.max(mineChance, 0), 0.5);
@@ -57,8 +50,12 @@ public class Sweeper {
         this.hitLocation = new MineTile(-1, -1);
         this.init(board);
     }
+    /**
+     * Initialise the board
+     * @param board the board string initialise from
+     */
     private void init(String board) {
-        String[] rows = board.split("\n");
+        String[] rows = board.split("\n"); // rows of the board
         this.height = rows.length;
         this.width = rows[0].length();
         this.neighbours = new int[this.width][this.height];
@@ -74,8 +71,9 @@ public class Sweeper {
             }
         }
     }
-    /*
-     * place mines onto the grid, ignoring the safe tile
+    /**
+     * Place mines onto the grid, ignoring the safe tile
+     * @param safe the tile to ignore
      */
     private void plantMines(MineTile safe) {
         int placed = 0;
@@ -89,9 +87,19 @@ public class Sweeper {
         }
         this.filled = true;
     }
+    /**
+     * Check if a space is a mine
+     * @param space the space to check
+     * @return true if the space is a mine
+     */
     private boolean isMine(MineTile space) {
         return this.mines[space.x()][space.y()];
     }
+    /**
+     * Set a space to be a mine or not
+     * @param space the space to set
+     * @param mine whether the space is a mine
+     */
     private void setMine(MineTile space, boolean mine) {
         if (this.mines[space.x()][space.y()] == mine) {
             return;
@@ -104,17 +112,39 @@ public class Sweeper {
             this.neighbours[tile.x()][tile.y()] += neighbourChange;
         }
     }
+    /**
+     * Get the number of neighbouring mines
+     * @param space the space to check
+     * @return the number of neighbouring mines
+     */
     private int getNeighbours(MineTile space) {
         return this.neighbours[space.x()][space.y()];
     }
+    /**
+     * Get all tiles touching a space which are unopened
+     * @param space the space to check
+     * @return the unopened tiles touching the space
+     */
     public Set<MineTile> getTouching(MineTile space) {
         return this.getSurrounding(space, true);
     }
+    /**
+     * Add a space to a set given a condition
+     * @param spaces the set of spaces
+     * @param space the space to add
+     * @param onlyClosed whether to only add closed spaces
+     */
     private void addIf(Set<MineTile> spaces, MineTile space, boolean onlyClosed) {
         if (!onlyClosed || !this.isOpen(space)) {
             spaces.add(space);
         }
     }
+    /**
+     * Get the spaces surrounding a space
+     * @param space the space to check
+     * @param onlyClosed whether to only get closed spaces
+     * @return the spaces surrounding the space
+     */
     public Set<MineTile> getSurrounding(MineTile space, boolean onlyClosed) {
         Set<MineTile> spaces = new HashSet<>();
         if (space.y() > 0) {
@@ -143,38 +173,73 @@ public class Sweeper {
         }
         return spaces;
     }
+    /**
+     * Get the spaces surrounding a space
+     * @param space the space to check
+     * @return the spaces surrounding the space
+     */
     public Set<MineTile> getSurrounding(MineTile space) {
         return this.getSurrounding(space, false);
     }
+    /**
+     * Check if a tile is open
+     * @param space the space to check
+     * @return true if the space is open
+     */
     public boolean isOpen(MineTile space) {
         return this.open[space.x()][space.y()];
     }
+    /**
+     * Set a tile to be open
+     * @param space the space to set
+     */
     private void setOpen(MineTile space) {
         if (!this.isOpen(space)) {
             this.remainingSpaces -= 1;
             this.open[space.x()][space.y()] = true;
         }
     }
-    public void setFlag(MineTile space, boolean flag) {
-        this.flags[space.x()][space.y()] = flag;
-    }
+    /**
+     * Check if a tile is flagged
+     * @param space the space to check
+     * @return true if the space is flagged
+     */
     public boolean isFlagged(MineTile space) {
         return this.flags[space.x()][space.y()];
     }
-    public OpenResponse tryOpen(MineTile space) {
+    /**
+     * Set a tile to be flagged
+     * @param space the space to set
+     * @param flag whether to flag the space
+     */
+    public void setFlag(MineTile space, boolean flag) {
+        this.flags[space.x()][space.y()] = flag;
+    }
+    /**
+     * Attempt to open a tile
+     * @param space the space to open
+     * @return the result of opening the tile
+     */
+    public Open tryOpen(MineTile space) {
         if (!this.filled) {
             this.plantMines(space);
         }
         if (this.isFlagged(space)) {
-            return new OpenResponse(0, "flag");
+            return new Open(0, Open.Tag.FLAG);
         }
         if (this.isMine(space)) {
             this.hitLocation = space;
-            return new OpenResponse(0, "lose");
+            return new Open(0, Open.Tag.LOSE);
         }
         this.setOpen(space);
-        return new OpenResponse(this.getNeighbours(space), this.remainingSpaces == this.mineCount ? "win" : "");
+        Open.Tag tag = this.remainingSpaces == this.mineCount ? Open.Tag.WIN : Open.Tag.NONE;
+        return new Open(this.getNeighbours(space), tag);
     }
+    /**
+     * Get the display character for a space
+     * @param space the space to display
+     * @return the character to display
+     */
     public char getDisplay(MineTile space) {
         if (this.isOpen(space)) {
             return Sweeper.SYMBOLS.charAt(this.getNeighbours(space));
@@ -186,6 +251,10 @@ public class Sweeper {
             return Sweeper.SYMBOLS.charAt(9);
         }
     }
+    /**
+     * Get all tiles as a set
+     * @return all tiles as a set
+     */
     public Set<MineTile> getAllSpaces() {
         Set<MineTile> spaces = new HashSet<>(this.height * this.width);
         for (int y = 0; y < this.height; y++) {
@@ -194,5 +263,26 @@ public class Sweeper {
             }
         }
         return spaces;
+    }
+}
+/**
+ * Open
+ * The result of opening a tile
+ * 
+ * @param neighbours the number of neighbouring mines
+ * @param tag the result of opening the tile
+ */
+record Open(int neighbours, Tag tag) {
+    enum Tag {
+        WIN, // the game has been won
+        LOSE, // the game has been lost
+        FLAG, // the tile is flagged
+        NONE // normal opening
+    }
+    public int neighbours() {
+        return this.neighbours;
+    }
+    public Tag tag() {
+        return this.tag;
     }
 }

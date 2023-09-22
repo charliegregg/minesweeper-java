@@ -6,30 +6,60 @@ import java.util.function.Function;
 
 /**
  * Minefield
+ * A set of tiles that are known to contain mines
+ * 
+ * @author Charlie Gregg
  */
 public class Minefield {
-    private Set<MineTile> spaces;
-    private int mines;
+    private Set<MineTile> spaces; // set of tiles included
+    private int mines; // number of mines in these tiles
 
     public Minefield(Set<MineTile> spaces, int mines) {
         this.spaces = spaces;
         this.mines = mines;
     }
+    /**
+     * Check if this field is filled
+     * @return true if this field is filled
+     */
     public boolean filled() {
         return this.spaces.size() == this.mines;
     }
+    /**
+     * Check if this field is empty
+     * @return true if this field is empty
+     */
     public boolean empty() {
         return this.mines == 0;
     }
+    /**
+     * Check if this field exists
+     * @return true if this field exists
+     */
     public boolean exists() {
         return this.spaces.size() > 0;
     }
+    /**
+     * Get the spaces in this field
+     * @return the spaces in this field
+     */
     public Set<MineTile> getSpaces() {
         return this.spaces;
     }
+    /**
+     * The naïve chance of each cell being a mine
+     * @return the chance of a mine
+     */
     public double getChance() {
         return (double) this.mines/this.spaces.size();
     }
+    /**
+     * Infer any reductions that can be made to a field
+     * when combined with another
+     * @param aField the first field
+     * @param bField the second field
+     * @return the inferred fields, or none if no inference can be made
+     */
     public static ArrayList<Minefield> intersect(Minefield aField, Minefield bField) {
         Set<MineTile> cSpaces = new HashSet<>(aField.spaces);
         cSpaces.retainAll(bField.spaces);
@@ -52,6 +82,11 @@ public class Minefield {
         }
         return new ArrayList<>();
     }
+    /**
+     * Filter the spaces in this field
+     * @param decider the function to decide whether to keep a space
+     * @param invert whether to invert the decider
+     */
     public void filter(Function<MineTile, Boolean> decider, boolean invert) {
         Set<MineTile> newSpaces = new HashSet<>();
         for (MineTile space : this.spaces) {
@@ -61,9 +96,18 @@ public class Minefield {
         }
         this.spaces = newSpaces;
     }
+    /**
+     * Filter the spaces in this field
+     * @param decider the function to decide whether to keep a space
+     */
     public void filter(Function<MineTile, Boolean> decider) {
         this.filter(decider, false);
     }
+    /**
+     * Check if this field touches another
+     * @param o the other field
+     * @return true if this field touches the other
+     */
     public boolean touches(Minefield o) {
         return new HashSet<>(this.spaces).removeAll(o.spaces);
     }
