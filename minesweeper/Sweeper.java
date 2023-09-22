@@ -96,6 +96,22 @@ public class Sweeper {
         return this.mines[space.x()][space.y()];
     }
     /**
+     * Check if a tile is open
+     * @param space the space to check
+     * @return true if the space is open
+     */
+    public boolean isOpen(MineTile space) {
+        return this.open[space.x()][space.y()];
+    }
+    /**
+     * Check if a tile is flagged
+     * @param space the space to check
+     * @return true if the space is flagged
+     */
+    public boolean isFlagged(MineTile space) {
+        return this.flags[space.x()][space.y()];
+    }
+    /**
      * Set a space to be a mine or not
      * @param space the space to set
      * @param mine whether the space is a mine
@@ -111,6 +127,24 @@ public class Sweeper {
         for (MineTile tile : surrounding) {
             this.neighbours[tile.x()][tile.y()] += neighbourChange;
         }
+    }
+    /**
+     * Set a tile to be open
+     * @param space the space to set
+     */
+    private void setOpen(MineTile space) {
+        if (!this.isOpen(space)) {
+            this.remainingSpaces -= 1;
+            this.open[space.x()][space.y()] = true;
+        }
+    }
+    /**
+     * Set a tile to be flagged
+     * @param space the space to set
+     * @param flag whether to flag the space
+     */
+    public void setFlag(MineTile space, boolean flag) {
+        this.flags[space.x()][space.y()] = flag;
     }
     /**
      * Get the number of neighbouring mines
@@ -180,40 +214,6 @@ public class Sweeper {
      */
     public Set<MineTile> getSurrounding(MineTile space) {
         return this.getSurrounding(space, false);
-    }
-    /**
-     * Check if a tile is open
-     * @param space the space to check
-     * @return true if the space is open
-     */
-    public boolean isOpen(MineTile space) {
-        return this.open[space.x()][space.y()];
-    }
-    /**
-     * Set a tile to be open
-     * @param space the space to set
-     */
-    private void setOpen(MineTile space) {
-        if (!this.isOpen(space)) {
-            this.remainingSpaces -= 1;
-            this.open[space.x()][space.y()] = true;
-        }
-    }
-    /**
-     * Check if a tile is flagged
-     * @param space the space to check
-     * @return true if the space is flagged
-     */
-    public boolean isFlagged(MineTile space) {
-        return this.flags[space.x()][space.y()];
-    }
-    /**
-     * Set a tile to be flagged
-     * @param space the space to set
-     * @param flag whether to flag the space
-     */
-    public void setFlag(MineTile space, boolean flag) {
-        this.flags[space.x()][space.y()] = flag;
     }
     /**
      * Attempt to open a tile
