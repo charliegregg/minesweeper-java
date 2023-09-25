@@ -243,6 +243,7 @@
     [More to check?] -> yes [Minefield.intersect()] -> [<choice>Reduced?] -> yes
     [<state>replace fields] -> [<state>update queue with;changes and effects] -->
     [<state>queue]
+    [update queue with;changes and effects] -> [More to check?]
     [Reduced?] -> no [More to check?] -> no
     [<choice>More to open?] -> yes [<choice>Minefield.empty()?] -> yes
     [<state>open spaces] -> [<state>found = true] ->[More to open?]
