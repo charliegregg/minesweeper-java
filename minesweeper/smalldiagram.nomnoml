@@ -1,0 +1,111 @@
+#title: CharlieGregg7.4
+#gravity: 2
+#ranker: longest-path
+// author Charlie Gregg
+// date 2023-09-22
+
+
+[<start>] -> [Minesweeper]
+[Minesweeper|
+  [<start>] -> 
+  [<table>properties|
+    width|int||
+    height|int||
+    mineChance|double
+  ] ->
+  [main()] ->
+  [setDifficulty()]
+  [main()] ->
+  [player()] ->
+  [open()]
+  [player()] ->
+  [toggleFlag()]
+  [player()] ->
+  [display()]
+  [main()] ->
+  [ai()]
+] ->
+[Sweeper|
+  [<start>] ->
+  [<table>properties|
+    mines|boolean\[\]\[\]||
+    open|boolean\[\]\[\]||
+    flags|boolean\[\]\[\]||
+    neighbours|int\[\]\[\]||
+    filled|boolean||
+    hitLocation|MineTile||
+    width|int||
+    height|int||
+    mineCount|int||
+    mineChance|double||
+    seed|long||
+    remainingSpaces|int
+  ]
+  [isMine()]
+  [isOpen()]
+  [isFlagged()]
+  [setMine()]
+  [plantMines()] -> [setMine()]
+  [setOpen()] -> [isOpen()]
+  [setFlag()]
+  [getNeighbours()]
+  [addIf()] -> [isOpen()]
+  [getSurrounding()] -> [addIf()]
+  [getTouching()] -> [getSurrounding()]
+  [tryOpen()] -> [plantMines()]
+  [tryOpen()] -> [isFlagged()]
+  [tryOpen()] -> [isMine()]
+  [tryOpen()] -> [getNeighbours()]
+  [getDisplay()] -> [isOpen()]
+  [getDisplay()] -> [getNeighbours()]
+  [getDisplay()] -> [isFlagged()]
+  [Open|
+  [<start>] ->
+    [<table>properties|
+      neighbours|int||
+      tag|Tag
+    ]
+  	[Tag] - [WIN]
+    [Tag] - [LOSE]
+    [Tag] - [FLAG]
+    [Tag] - [NONE]
+  ]
+] ->
+[MineTile|
+  [<start>] ->
+  [<table>properties|
+    x|int||
+    y|int
+  ]
+]
+[Minesweeper] -> [MineTile]
+[Minefield|
+  [<start>] ->
+  [<table>properties|
+    spaces|Set<MineTile>||
+    mines|int
+  ]
+  [filled()]
+  [empty()]
+  [exists()]
+  [getSpaces()]
+  [getChance()]
+  [intersect()]
+  [filter()]
+  [touches()]
+] -> [MineTile]
+[MineBot|
+  [<start>] ->
+  [<table>properties|
+    board|Sweeper||
+    fields|Set<Minefield>||
+    state|int
+  ]
+  [open()]
+  [openBest()] -> [open()]
+  [expand()] -> [openBest()]
+  [run()] -> [expand()]
+] -> [Sweeper]
+[MineBot] -> [Minefield]
+[MineBot] -> [MineTile]
+[Minesweeper] -> [MineBot]
