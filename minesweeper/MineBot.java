@@ -75,11 +75,15 @@ public class MineBot {
      * This is the main logic of the bot
      */
     private void expand() {
+        Set<Minefield> newFields; // fields after filtering for 0's
+        boolean changed; // if there has been an update in the fields after reduction
+        boolean found; // if a safe tile to open has been found
+        boolean solved; // if the board is solved
         if (this.state != 0) {
             return;
         }
         // remove any field spaces that are over open tiles
-        Set<Minefield> newFields = new HashSet<>();
+        newFields = new HashSet<>();
         for (Minefield field : this.fields) {
             field.filter(this.board::isOpen, true);
             if (field.exists()) {
@@ -88,44 +92,28 @@ public class MineBot {
         }
         this.fields = newFields;
         // reduce the size and overlap of fields
-        Set<Minefield[]> queue = new HashSet<>();
-        ArrayList<Minefield> orderedFields = new ArrayList<>(this.fields);
-        for (int i = 0; i < orderedFields.size(); i++) {
-            for (int j = i+1; j < orderedFields.size(); j++) {
-                if (orderedFields.get(i).touches(orderedFields.get(j))) {
-                    queue.add(new Minefield[] {orderedFields.get(i), orderedFields.get(j)});
-                }
-            }
-        }
-        while (queue.size() > 0) {
-            Minefield[] pair = queue.iterator().next();
-            queue.remove(pair);
-            Minefield aField = pair[0];
-            Minefield bField = pair[1];
-            ArrayList<Minefield> result = Minefield.intersect(aField, bField);
-            if (result.size() > 0) {
-                result.removeIf(field -> (field.getSpaces().size() == 0));
-                this.fields.remove(aField);
-                this.fields.remove(bField);
-                queue.removeIf(testPair -> 
-                       testPair[0].equals(aField) 
-                    || testPair[0].equals(bField) 
-                    || testPair[1].equals(aField) 
-                    || testPair[1].equals(bField)
-                );
-                for (Minefield newField : result) {
-                    for (Minefield field : this.fields) {
-                        if (newField.touches(field)) {
-                            queue.add(new Minefield[] {newField, field});
-                        }
+        changed = true;
+        reduce: while (changed) {
+            changed = false;
+            ArrayList<Minefield> orderedFields = new ArrayList<>(this.fields);
+            for (int i = 0; i < orderedFields.size(); i++) {
+                Minefield aField = orderedFields.get(i);
+                for (int j = i+1; j < orderedFields.size(); j++) {
+                    Minefield bField = orderedFields.get(j);
+                    ArrayList<Minefield> result = Minefield.intersect(aField, bField);
+                    if (result.size() > 0) {
+                        result.removeIf(field -> (!field.exists()));
+                        this.fields.remove(aField);
+                        this.fields.remove(bField);
+                        this.fields.addAll(result);
+                        changed = true;
+                        continue reduce; // reexamine the fields
                     }
                 }
-
-                this.fields.addAll(result);
             }
         }
         // find possible opennings and open them
-        boolean found = false;
+        found = false;
         for (Minefield field : new ArrayList<>(this.fields)) {
             if (field.empty()) {
                 for (MineTile space : field.getSpaces()) {
@@ -141,7 +129,7 @@ public class MineBot {
             }
         }
         // test if the board is solved
-        boolean solved = true;
+        solved = true;
         for (Minefield field : new ArrayList<>(this.fields)) {
             if (!field.filled()) {
                 solved = false;
@@ -160,13 +148,13 @@ public class MineBot {
      * @return the spaces in at least min fields
      */
     public Set<MineTile> getHighlights(int min) {
-        int[][] counts = new int[this.board.width][this.board.height];
+        int[][] counts = new int[this.board.width][this.board.height]; // number of fields a space is in
+        Set<MineTile> tiles = new HashSet<>(); // spaces in at least min fields
         for (Minefield field : this.fields) {
             for (MineTile space : field.getSpaces()) {
                 counts[space.x()][space.y()]++;
             }
         }
-        Set<MineTile> tiles = new HashSet<>();
         for (int x = 0; x < this.board.width; x++) {
             for (int y = 0; y < this.board.height; y++) {
                 if (counts[x][y] >= min) {
