@@ -19,9 +19,29 @@ public class Minesweeper {
 
     public static int winState = 0; // 0 none, 1 win, -1 lose
 
-    public static int width = 15; // the width of the board to play on
-    public static int height = 15; // the height of the board to play on
-    public static double mineChance = 0.07; // the chance of a mine being on each tile
+    public static int width; // the width of the board to play on
+    public static int height; // the height of the board to play on
+    public static double mineChance; // the chance of a mine being on each tile
+
+    public enum Difficulty {
+        EASY(1,     15, 15, 0.07),
+        MEDIUM(2,   15, 15, 0.10),
+        HARD(3,     15, 25, 0.14),
+        EXPERT(4,   20, 30, 0.19),
+        INSANE(5,   30, 50, 0.22);
+
+        public final int value; // difficulty number
+        public final int width; // width of board
+        public final int height; // height of board
+        public final double mineChance; // chance of each tile being a mine
+
+        Difficulty(int value, int width, int height, double mineChance) {
+            this.value = value;
+            this.width = width;
+            this.height = height;
+            this.mineChance = mineChance;
+        }
+    }
 
     /**
      * Open a space on the board
@@ -114,14 +134,16 @@ public class Minesweeper {
         // display a help message at the beginning
         System.out.println("Make moves using decimal coordinates, follow with an 'f' to flag");
         while (winState == 0) {
-            System.out.print("Move (x,yf?): ");
-            move = in.nextLine().toLowerCase();
+            do {
+                System.out.print("Move (x,yf?): ");
+                move = in.nextLine().toLowerCase();
+            } while (!move.matches(" *\\d+ *, *\\d+ *f?")); // regex for a valid move
             flag = move.endsWith("f");
             if (flag) {
-                move = move.replace("f", "");
+                move = move.replace("f", ""); // safe due to regex, any 'f' will always be the last char
             }
-            coords = move.split(",");
-            space = new MineTile(Integer.parseInt(coords[0]), Integer.parseInt(coords[1]));
+            coords = move.split(","); // may need to be stripped due to whitespace
+            space = new MineTile(Integer.parseInt(coords[0].strip()), Integer.parseInt(coords[1].strip()));
             if (flag) {
                 toggleFlag(ms, space);
             } else {
@@ -147,28 +169,9 @@ public class Minesweeper {
      * @param difficulty the difficulty to set to (1-5)
      */
     public static void setDifficulty(int difficulty) {
-        switch (difficulty) {
-            case 1:
-                break;
-            case 2:
-                mineChance = 0.1;
-                break;
-            case 3:
-                width = 15;
-                height = 25;
-                mineChance = 0.14;
-                break;
-            case 4:
-                width = 20;
-                height = 30;
-                mineChance = 0.19;
-                break;
-            case 5:
-                width = 30;
-                height = 50;
-                mineChance = 0.22;
-                break;
-        }
+        width = Difficulty.values()[difficulty - 1].width;
+        height = Difficulty.values()[difficulty - 1].height;
+        mineChance = Difficulty.values()[difficulty - 1].mineChance;
     }
 
     public static void main(String args[]) {
@@ -176,17 +179,24 @@ public class Minesweeper {
         String mode; // "p" or "a"
         int difficulty; // 1-5
 
-        System.out.print("Play or AI (p/a): ");
-        mode = in.nextLine().toLowerCase();
-        System.out.print("Difficulty (1-5): ");
-        difficulty = Integer.parseInt(in.nextLine());
+        do {
+            System.out.print("Play or AI (p/a): ");
+            mode = in.nextLine().toLowerCase();
+        } while (!mode.equals("p") && !mode.equals("a"));
+        do {
+            try {
+                System.out.print("Difficulty (1-5): ");
+                difficulty = Integer.parseInt(in.nextLine());
+            } catch (NumberFormatException e) {
+                difficulty = 0;
+                System.out.println("Invalid difficulty");
+            }
+        } while (difficulty < 1 || difficulty > 5);
         setDifficulty(difficulty);
         if (mode.equals("p")) {
             player(in);
-        } else if (mode.equals("a")){
-            ai();
         } else {
-            System.out.println("Invalid mode");
+            ai();
         }
     }
 }
